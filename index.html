@@ -1,0 +1,109 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title></title>
+    </head>
+    <script>
+        
+        /*
+         * El siguiente script se encarga de recuperar el valor del campo
+         * contraseña y, mediante una petición Ajax al servidor (archivo
+         * applyHash.php) encriptarla con un hash usando el algoritmo Blowfish, 
+         * para después recuperar dicha contraseña e introducirla en el 
+         * LocalStorage.
+         * 
+         * Utilizaremos Ajax de manera asíncrona para que no introduzca en el
+         * LocalStorage ningún valor hasta que no tengamos devuelta la contraseña
+         * encriptada con su hash.
+         * 
+         */
+    
+    
+        function setLocalPass(callback) {
+            /*
+             * Trabajaremos con el formato JSON, así que el objeto FormData nos servirá
+             * para establecer un conjunto de clave/valor fácil de utilizar para el
+             * envío y recepción de datos.
+             * 
+             * Aunque en este caso podríamos utilizar un string en plano (ya que sólo
+             * es un valor), es recomendable acostumbrarse a trabajar con objetos.
+             * 
+             * https://developer.mozilla.org/es/docs/Web/API/XMLHttpRequest/FormData
+             */
+            var formData = new FormData();
+            
+            //Recuperamos la contraseña del input.
+            var password = document.getElementById('input_password').value;
+            
+            //Agregamos la contraseña al FormData con la estructura clave/valor.
+            formData.append('password_sin_hash', password);
+            
+            //Inicializamos una petición al servidor.
+            var xmlhttp = new XMLHttpRequest();
+            
+            try {
+                xmlhttp.onreadystatechange = function() {
+                    
+                //Si la petición se ejecuta correctamente...
+                if (this.readyState == 4 && this.status == 200) {
+                    /*
+                     * Recupera la respuesta del servidor, haciendo un parseo
+                     * desde string (lo que devuelve) a JSON, para crear
+                     * un objeto al que llamaremos "objeto".
+                     * 
+                     */
+                    var objeto = JSON.parse(this.responseText);
+                    
+                    /*
+                     * Llama a la función callback (pasada por parámetros en
+                     * la función principal setLocalPass) y ésta será la 
+                     * encargada de trabajar con dicho objeto.
+                     */
+                    return callback(objeto);
+                }
+            };
+                /*
+                 * Aquí se indica a qué archivo debe apuntar la petición al
+                 * servidor ("applyHash.php"), con qué método (POST) y el
+                 * último parámetro indica si la petición debe ser asíncrona
+                 * (por defecto, true), o no (false).
+                 * 
+                 * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/open
+                 */
+                xmlhttp.open("POST", "applyHash.php", true);
+                
+                /*
+                 * Aquí se realiza el envío de datos a la petición establecida
+                 * anteriormente al servidor. En este caso, enviamos el objeto
+                 * creado anteriormente "formData" con el atributo "password_sin_hash".
+                 */
+                xmlhttp.send(formData); 
+                
+            } catch(error) {
+                return null;
+            }  
+        }
+        
+        /*
+         * La función "applyHash" hace de callback para la petición hecha
+         * mediante Ajax. Recibe el objeto por parámetros con el hash ya
+         * aplicado (recordemos que esta respuesta de Ajax ha tenido lugar
+         * DESPUÉS de que la información haya sido enviada al servidor/archivo
+         * PHP, allí fue tratada la información y ahora la devuelve con el hash
+         * incluido).
+         */
+        function applyHash(objeto){
+            /*
+             * Al tratarse de un objeto, llamamos a su atributo 
+             * "password_sin_hash" el cual tiene el valor que queremos.
+             */
+            localStorage.setItem("contraseña", objeto.password_sin_hash);
+        }
+    </script>
+    <body>
+        <form method="POST">
+            <input type="text" placeholder="Contraseña" id="input_password">
+            <input type="button" value="Enviar" onclick="setLocalPass(applyHash)">
+        </form>
+    </body>
+</html>
