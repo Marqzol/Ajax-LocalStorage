@@ -28,12 +28,16 @@
      */
     $objeto = (object) $datos_recibidos;
 
+    
+    
     /*
      * A continuación, se efectúa la codificación en el propio atributo del objeto,
      * seleccionando como segundo parámetro de la función password_hash el
      * algoritmo de encriptación Blowfish.
      */
-    $objeto->password_sin_hash = password_hash($objeto->password_sin_hash, PASSWORD_BCRYPT);
+    if (!empty(trim($objeto->password_sin_hash))) {
+       $objeto->password_sin_hash = password_hash($objeto->password_sin_hash, PASSWORD_BCRYPT); 
+    }
     
     /*
      * Finalmente el objeto es codificado a formato JSON y se envía de vuelta

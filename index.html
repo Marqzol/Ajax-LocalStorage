@@ -97,7 +97,9 @@
              * Al tratarse de un objeto, llamamos a su atributo 
              * "password_sin_hash" el cual tiene el valor que queremos.
              */
-            localStorage.setItem("contraseña", objeto.password_sin_hash);
+            if (objeto.password_sin_hash.trim().length !== 0) {
+                localStorage.setItem("contraseña", objeto.password_sin_hash);
+            }
         }
     </script>
     <body>
